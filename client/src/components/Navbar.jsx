@@ -1,12 +1,18 @@
-import { useState } from "react" 
+import { useEffect, useState } from "react" 
 import Image from "./Image"
 import {Link} from "react-router"
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, SignInButton, useAuth, UserButton } from '@clerk/clerk-react'
 
 
 const Navbar = () => {
-
   const [hamburger, setHamburger] = useState(false)
+  const {getToken} = useAuth();
+
+
+  // useEffect(() => {
+  //   getToken().then(token => console.log(token))
+  // }, [])
+
   return (
     <div className='w-full h-16 md:h-20 flex items-center justify-between'>
         {/* LOGO */}
@@ -25,7 +31,7 @@ const Navbar = () => {
           <div 
           onClick={() => setHamburger(prev => !prev)}
           className="cursor-pointer text-3xl">
-            {console.log(hamburger)}
+            
             {hamburger ? "X" : "☰"}
           </div>
 
@@ -61,6 +67,10 @@ const Navbar = () => {
                 </button>
               </Link>
          </SignedOut>
+         
+         <SignedIn>
+        <UserButton />
+      </SignedIn>
      
         </div>
     </div>
