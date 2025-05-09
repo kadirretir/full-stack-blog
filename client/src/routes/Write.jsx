@@ -24,12 +24,12 @@ const Write = () => {
  }, [img])
 
  useEffect(() => {  
-  console.log(video)
   video && setValue(prev => prev+`<p><iframe class="ql-video" src="${video}" /></p>`)
  }, [video])
 
  const mutation = useMutation({
   mutationFn: async (newPost) => {
+   
     const token = await getToken();
     if (!token) throw new Error("No token");
 
@@ -55,25 +55,25 @@ const Write = () => {
 
 
 
- if(!isLoaded) {
-  return <div className="">Loading...</div>
- }
+//  if(!isLoaded) {
+//   return <div className="">Loading...</div>
+//  }
 
- if(isLoaded && !isSignedIn) {
-  return <div className="">You are not signed in...</div>
- }
+//  if(isLoaded && !isSignedIn) {
+//   return <div className="">You are not signed in...</div>
+//  }
 
 const handleSubmit = (e) => {
 e.preventDefault();
 const formData = new FormData(e.target)
 const data = {
-  img: cover.filePath || "",
+  img: cover.filePath || "" ,
   title: formData.get('title'),
   category: formData.get('category'),
   desc: formData.get('desc'),
   content: value
 }
-console.log(data)
+
 
 mutation.mutate(data)
 }
@@ -85,11 +85,11 @@ return (
   <h1 className='text-xl font-light'>Create a New Post</h1>
   <form onSubmit={handleSubmit} className='flex flex-col gap-6 flex-1 mb-6'>
      <Upload type="image" setProgress={setProgress} setCover={setCover}>
-    <button className='w-max p-2 shadow-md rounded-xl text-sm text-gray-500 bg-white'>
+    <button type='button' className='w-max p-2 shadow-md rounded-xl text-sm text-gray-500 bg-white'>
       Add a cover image
       </button>
 
-      </Upload>
+      </Upload> 
 
  
 

@@ -1,32 +1,60 @@
-import { Link } from 'react-router'
+import { Link, useParams } from 'react-router'
 import Image from '../components/Image'
 import PostMenuAction from '../components/PostMenuAction'
 import Search from '../components/Search'
 import Comments from '../components/Comments'
+import {useQuery} from '@tanstack/react-query'
+import axios from 'axios'
+import { format } from 'timeago.js'
+
+
+
+
+
+const fetchPost = async (slug) => { 
+  const res = await axios.get(`${import.meta.env.VITE_API_URL}/posts/${slug}`)
+  return res.data;
+  }
+
 
 const SinglePost = () => {
+
+  const {slug} = useParams();
+
+  const {isPending, error, data} = useQuery({
+    queryKey: ["post", slug],
+    queryFn: () => fetchPost(slug)
+      });
+
+  if(isPending) {
+    return "Loading..."
+  }
+  if(error) {
+    return "Something went wrong..." + error.message
+  }
+
+
   return (
     <div className='flex flex-col gap-8'>
   
       {/* Detail */}
     <div className="flex gap-8">
       <div className="lg:w-3/5 flex flex-col gap-12">
-      <h1 className='text-xl md:text-3xl xl:text-4xl 2xl:text-5xl font-semibold'>Lorem ipsum dolor sit amet consectetur adipisicing elit.</h1>
+      <h1 className='text-xl md:text-3xl xl:text-4xl 2xl:text-5xl font-semibold'>{data.title}</h1>
 
         <div className="flex items-center gap-2 text-gray-400 text-sm">
 
           <span>Written By</span>
-          <Link to="/" className='text-blue-800'>John Doe</Link>
+          <Link to="/" className='text-blue-800'>{data.user.username}</Link>
           <span>on</span>
-          <Link to="/" className='text-blue-800'>Web Design</Link>
-          <span>2 Days Ago</span>
+          <Link to="/" className='text-blue-800'>{data.category}</Link>
+          <span>{format(data.createdAt)}</span>
         </div>
-        <p className='text-gray-500 font-medium'>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et 
-          dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.</p>
+        <p className='text-gray-500 font-medium'>{data.desc}</p>
       </div>
-      <div className="hidden lg:block w-2/5">
-        <Image src="postImg.jpeg" className="rounded-2xl"/>
-      </div>
+    { data.img && (<div className="hidden lg:block w-2/5">
+        <Image src={data.img} className="rounded-2xl"/>
+      </div>)}
     </div>
       {/* Content */}
 
@@ -86,8 +114,9 @@ const SinglePost = () => {
 
            
             <div className="flex items-center gap-8">
-              <Image src="userImg.jpeg" className="w-12 h-12 rounded-full object-cover" w="48" h="48" />
-            <Link className='text-blue-800'>John Doe</Link>
+           { data.user.img &&  <Image src={data.user.img} className="w-12 h-12 rounded-full object-cover" w="48" h="48" />}
+
+            <Link className='text-blue-800'>{data.user.username}</Link>
             </div>
             <p className='text-sm text-gray-500'>Lorem ipsum color di sit amet.</p>
             <div className="flex gap-2">
@@ -116,7 +145,7 @@ const SinglePost = () => {
           </div>
       </div>
 
-    <Comments />
+    <Comments postId={data._id} />
       </div>
   )
 }

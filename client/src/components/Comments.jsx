@@ -1,19 +1,96 @@
-import React from 'react'
+import { useAuth, useUser } from '@clerk/clerk-react';
 import Comment from './Comment'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { toast } from 'react-toastify';
 
-const Comments = () => {
+
+
+const fetchComments = async (postId) => { 
+  const res = await axios.get(`${import.meta.env.VITE_API_URL}/comments/${postId}`)
+  return res.data;
+  }
+
+const Comments = ({postId}) => {
+  const {user} = useUser();
+  const {getToken} = useAuth();
+  const queryClient = useQueryClient();
+  
+  const {isPending, error, data} = useQuery({
+    queryKey: ["comments", postId],
+    queryFn: () => fetchComments(postId)
+      });
+
+      const mutation = useMutation({
+        mutationFn: async (newComment) => {
+         
+          const token = await getToken();
+          if (!token) throw new Error("No token");
+      
+          return await axios.post(
+            `${import.meta.env.VITE_API_URL}/comments/${postId}`,
+            newComment,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          );
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({queryKey: ["comments", postId]})
+        },
+        onError: (error) => {
+         toast.error(error.message)
+        }
+      });
+
+
+
+  if(!data) {
+    return "Comments not found..."
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    const data = {
+      desc: formData.get("desc")
+    }
+    mutation.mutate(data)
+  }
+
+
   return (
-    <div className='flex flex-col gap-8 lg:w-3/5'>
+    <div className='flex flex-col gap-8 lg:w-3/5 mb-12'>
         <h1 className='text-xl text-gray-500 underline'>Comments</h1>
-        <div className="flex items-center justify-between gap-8 w-full">
-            <textarea className='w-full py-4 rounded-xl' placeholder='Write a comment...' />
+        <form onSubmit={handleSubmit} className="flex items-center justify-between gap-8 w-full">
+            <textarea name='desc' className='w-full py-4 rounded-xl' placeholder='Write a comment...' />
             <button className='bg-blue-800 px-4 py-3 text-white font-medium rounded-xl'>Send</button>
-        </div>
-    <Comment />
-    <Comment />
-    <Comment />
-    <Comment />
-    <Comment />
+        </form>
+      {isPending ? "Loading..." : error ? "Error loading comments" : <>
+
+      {mutation.isPending && (
+        <Comment
+        comment={{
+          desc: `${mutation.variables.des} (Sending...)`,
+          createdAt: new Date(),
+          user: {
+            img: user.imageUrl,
+            username: user.username
+          }
+        }}
+        />
+      )}
+        
+      {data.map((comment) => {
+        
+        return (
+          <Comment key={comment._id} comment={comment} />
+        )
+      })}
+      </>}
     </div>
   )
 }
