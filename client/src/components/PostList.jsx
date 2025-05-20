@@ -1,13 +1,18 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import PostListItem from "./PostListItem"
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { useSearchParams } from "react-router";
 
-const fetchPosts = async (pageparam) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/posts?page=${pageparam}&limit=2`)
+const fetchPosts = async (pageparam, searchParams) => {
+  const searchParamsObj = Object.fromEntries([...searchParams])
+
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/posts?page=${pageparam}&limit=10&${new URLSearchParams(searchParamsObj).toString()}`)
   const data = await res.json()
   return data
 }
 const PostList = () => {
+
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     data,
     error,
@@ -17,8 +22,8 @@ const PostList = () => {
     isFetchingNextPage,
     status,
   } = useInfiniteQuery({
-    queryKey: ['posts'],
-    queryFn: ({ pageParam  = 1}) => fetchPosts(pageParam),
+    queryKey: ['posts', searchParams.toString()],
+    queryFn: ({ pageParam  = 1}) => fetchPosts(pageParam, searchParams),
     initialPageParam: 1,
     getNextPageParam: (lastPage, pages) => lastPage.hasMore ? pages.length + 1 : undefined,
   })
