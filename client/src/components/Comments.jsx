@@ -58,6 +58,8 @@ const Comments = ({postId}) => {
     const data = {
       desc: formData.get("desc")
     }
+
+   e.target.desc.value = "";
     mutation.mutate(data)
   }
 
@@ -74,7 +76,7 @@ const Comments = ({postId}) => {
       {mutation.isPending && (
         <Comment
         comment={{
-          desc: `${mutation.variables.des} (Sending...)`,
+          desc: `${mutation.variables.desc} (Sending...)`,
           createdAt: new Date(),
           user: {
             img: user.imageUrl,
@@ -87,7 +89,11 @@ const Comments = ({postId}) => {
       {data.map((comment) => {
         
         return (
-          <Comment key={comment._id} comment={comment} />
+          <Comment
+           user={user}
+           postId={postId}
+           key={comment._id}
+            comment={comment} />
         )
       })}
       </>}
